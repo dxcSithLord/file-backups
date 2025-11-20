@@ -63,6 +63,61 @@ if (-not (Test-Path $installDrive)) {
     exit 1
 }
 
+# Validate drive type - must be a local disk, not a network drive
+# Using WMI for PowerShell 2.0 compatibility
+# DriveType: 3 = Local Disk, 4 = Network Drive, 5 = CD-ROM, 6 = RAM Disk
+try {
+    $driveLetter = $installDrive.TrimEnd(':')
+    $driveInfo = Get-WmiObject -Class Win32_LogicalDisk -Filter "DeviceID='$installDrive'" -ErrorAction Stop
+
+    if ($driveInfo -eq $null) {
+        Write-Log "ERROR: Unable to retrieve information for drive $installDrive" "ERROR"
+        exit 1
+    }
+
+    $driveType = $driveInfo.DriveType
+    $driveTypeName = switch ($driveType) {
+        0 { "Unknown" }
+        1 { "No Root Directory" }
+        2 { "Removable Disk" }
+        3 { "Local Disk" }
+        4 { "Network Drive" }
+        5 { "Compact Disc" }
+        6 { "RAM Disk" }
+        default { "Unknown ($driveType)" }
+    }
+
+    Write-Log "Drive $installDrive type: $driveTypeName"
+
+    # Reject network drives
+    if ($driveType -eq 4) {
+        Write-Log "ERROR: Installation to network drives is not supported." "ERROR"
+        Write-Log "Network drives may have reliability issues with file operations." "ERROR"
+        Write-Log "Please use a local drive (e.g., D:, E:, F:) instead." "ERROR"
+        exit 1
+    }
+
+    # Warn for non-standard drive types but allow them
+    if ($driveType -ne 3) {
+        Write-Log "WARNING: Drive type is '$driveTypeName'. Local Disk (type 3) is recommended for best reliability." "WARN"
+        Write-Log "Installation will continue, but you may experience issues." "WARN"
+    }
+
+    # Check if drive is ready and has available space
+    if ($driveInfo.DriveType -eq 3) {
+        $freeSpaceGB = [math]::Round($driveInfo.FreeSpace / 1GB, 2)
+        Write-Log "Drive $installDrive has $freeSpaceGB GB free space available"
+
+        if ($driveInfo.FreeSpace -lt 100MB) {
+            Write-Log "WARNING: Low disk space on $installDrive. Installation may fail." "WARN"
+        }
+    }
+
+} catch {
+    Write-Log "WARNING: Could not validate drive type: $_" "WARN"
+    Write-Log "Installation will continue, but drive validation was skipped." "WARN"
+}
+
 # Create installation directory if it doesn't exist
 try {
     if (-not (Test-Path $installPath)) {

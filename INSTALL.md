@@ -7,6 +7,7 @@ This guide explains how to install the File Backups utility on Windows Server us
 - Windows Server (2008 R2 or newer)
 - PowerShell 2.0 or higher
 - Local drive (other than C:) for installation
+- **Network drives are NOT supported** - must use a local disk (D:, E:, F:, etc.)
 - Administrator privileges (recommended)
 
 ## Installation
@@ -76,10 +77,12 @@ The installation script will:
 2. Determine the installation path (environment variable or default)
 3. Validate that the target drive is not C:
 4. Verify the target drive exists
-5. Create the installation directory structure
-6. Copy all necessary files and folders
-7. Create an installation info file
-8. Display installation summary
+5. Validate drive type (must be local disk, not network drive)
+6. Check available disk space and report free space
+7. Create the installation directory structure
+8. Copy all necessary files and folders
+9. Create an installation info file
+10. Display installation summary
 
 ## Validation
 
@@ -114,6 +117,16 @@ Or manually delete the installation directory.
 ### Error: Drive does not exist
 
 Ensure the target drive (e.g., D:, E:) is available and accessible.
+
+### Error: Network drives not supported
+
+The installation script blocks network drives to ensure reliability. If you see this error:
+
+```
+ERROR: Installation to network drives is not supported.
+```
+
+**Solution:** Use a local drive instead (D:, E:, F:, etc.)
 
 ### Error: Cannot create directory
 
@@ -154,18 +167,18 @@ $env:FILE_BACKUPS_INSTALL_PATH = "e:\myapps\file-backups"
 
 Result: Files installed to `e:\myapps\file-backups`
 
-### Install to network-mapped drive
+### Network Drive Limitation
 
-```powershell
-# Map a network drive first (example)
-net use Z: \\server\share
+**Network drives are NOT supported.** The installation script will detect and reject network-mapped drives to ensure reliability.
 
-# Install to the mapped drive
-$env:FILE_BACKUPS_INSTALL_PATH = "z:\applications\file-backups"
-.\install.ps1
-```
+If you need to install on a remote server, either:
+1. Run the installation script directly on the remote server using a local drive
+2. Copy files manually to the network location (not recommended - may cause issues)
 
-**Note:** While network drives are supported, it's recommended to use local drives for better performance.
+Network drives are blocked because:
+- File operation reliability issues with browser extensions
+- Potential permission and locking conflicts
+- Performance degradation
 
 ## Post-Installation
 
