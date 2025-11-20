@@ -82,10 +82,25 @@ if (Test-Path $installInfoFile) {
 Write-Host ""
 Write-Host "WARNING: This will permanently delete all files in: $installPath" -ForegroundColor Yellow
 Write-Host ""
+
+# If this doesn't appear to be a valid installation, require explicit path confirmation
+if (-not $isValidInstallation) {
+    Write-Host "This directory does not contain an install-info.txt file." -ForegroundColor Red
+    Write-Host "To proceed with deletion, please type the full path exactly as shown above: " -NoNewline -ForegroundColor Red
+    $pathConfirmation = Read-Host
+
+    if ($pathConfirmation -ne $installPath) {
+        Write-Log "Path confirmation failed. Uninstallation cancelled for safety." "ERROR"
+        exit 1
+    }
+    Write-Host ""
+}
+
 Write-Host "Are you sure you want to continue? (yes/no): " -NoNewline -ForegroundColor Yellow
 $confirmation = Read-Host
 
-if ($confirmation -ne "yes") {
+# Use case-insensitive comparison for better user experience
+if ($confirmation.ToLower() -ne "yes") {
     Write-Log "Uninstallation cancelled by user."
     exit 0
 }

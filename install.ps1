@@ -57,10 +57,9 @@ $installPath = $installPath.TrimEnd('\').TrimEnd('/')
 
 Write-Log "Installing File Backups to: $installPath"
 
-# Check if the drive exists
-$drive = Split-Path -Qualifier $installPath
-if (-not (Test-Path $drive)) {
-    Write-Log "ERROR: Drive $drive does not exist. Please check the installation path." "ERROR"
+# Check if the drive exists (reuse $installDrive variable)
+if (-not (Test-Path $installDrive)) {
+    Write-Log "ERROR: Drive $installDrive does not exist. Please check the installation path." "ERROR"
     exit 1
 }
 
@@ -78,7 +77,9 @@ try {
     exit 1
 }
 
-# Create subdirectories
+# Create subdirectories explicitly for better error handling and progress reporting
+# Note: While Copy-Item -Recurse can create directories, pre-creating them allows
+# us to catch permission issues early and provide clearer feedback to the user
 $subdirs = @("addon", "build-tools", "docs")
 foreach ($subdir in $subdirs) {
     $subdirPath = Join-Path $installPath $subdir

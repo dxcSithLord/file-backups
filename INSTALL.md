@@ -179,10 +179,10 @@ After installation:
 
 For issues or questions:
 - Check the main README.md
-- Visit: https://github.com/pmario/file-backups
+- Visit: [GitHub Repository](https://github.com/pmario/file-backups)
 - Review existing issues or create a new one
 
 ## License
 
 Copyright Mario Pietsch 2017-2020
-CC-BY-NC-SA - https://creativecommons.org/licenses/by-nc-sa/4.0
+[CC-BY-NC-SA](https://creativecommons.org/licenses/by-nc-sa/4.0)
